@@ -8,7 +8,7 @@ interface Props {
 }
 
 export async function generateStaticParams() {
-  const tags = getAllTags();
+  const tags = await getAllTags();
   return tags.map((tag) => ({ tag }));
 }
 
@@ -24,8 +24,8 @@ export async function generateMetadata({ params }: Props) {
 export default async function TagPage({ params }: Props) {
   const { tag } = await params;
   const decodedTag = decodeURIComponent(tag);
-  const posts = getPostsByTag(decodedTag);
-  const allTags = getAllTags();
+  const posts = await getPostsByTag(decodedTag);
+  const allTags = await getAllTags();
 
   if (posts.length === 0 && !allTags.includes(decodedTag)) {
     notFound();

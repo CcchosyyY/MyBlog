@@ -1,35 +1,11 @@
 import Link from 'next/link';
 import PostCard from '@/components/PostCard';
+import { getAllPosts } from '@/lib/posts';
 
-// 임시 샘플 데이터 (나중에 MDX에서 가져올 예정)
-const recentPosts = [
-  {
-    title: '블로그를 시작하며',
-    description:
-      '나만의 블로그를 만들게 된 이유와 앞으로의 계획에 대해 이야기합니다.',
-    date: '2024-01-15',
-    slug: 'hello-world',
-    tags: ['일상', '시작'],
-  },
-  {
-    title: 'Next.js로 블로그 만들기',
-    description:
-      'Next.js 14와 Tailwind CSS를 사용하여 개인 블로그를 구축하는 과정을 정리합니다.',
-    date: '2024-01-14',
-    slug: 'building-blog-with-nextjs',
-    tags: ['개발', 'Next.js'],
-  },
-  {
-    title: 'Markdown으로 글 작성하기',
-    description:
-      'MDX를 활용하여 블로그 글을 효율적으로 작성하는 방법을 알아봅니다.',
-    date: '2024-01-13',
-    slug: 'writing-with-markdown',
-    tags: ['개발', 'MDX'],
-  },
-];
+export default async function Home() {
+  const allPosts = await getAllPosts();
+  const recentPosts = allPosts.slice(0, 3);
 
-export default function Home() {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       {/* Hero Section */}
@@ -71,11 +47,26 @@ export default function Home() {
             모든 글 보기 &rarr;
           </Link>
         </div>
-        <div className="grid gap-6">
-          {recentPosts.map((post) => (
-            <PostCard key={post.slug} {...post} />
-          ))}
-        </div>
+        {recentPosts.length > 0 ? (
+          <div className="grid gap-6">
+            {recentPosts.map((post) => (
+              <PostCard
+                key={post.slug}
+                title={post.title}
+                description={post.description}
+                date={post.date}
+                slug={post.slug}
+                tags={post.tags}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <p className="text-gray-500 dark:text-gray-400">
+              아직 작성된 글이 없습니다.
+            </p>
+          </div>
+        )}
       </section>
 
       {/* Profile Section */}

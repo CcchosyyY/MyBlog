@@ -33,9 +33,9 @@ export default async function CategoryPage({ params }: Props) {
     notFound();
   }
 
-  const posts = getPostsByCategory(category);
+  const posts = await getPostsByCategory(category);
   const categoryName = getCategoryName(category);
-  const allPosts = getAllPosts();
+  const allPosts = await getAllPosts();
 
   const searchPosts = allPosts.map((post) => ({
     title: post.title,

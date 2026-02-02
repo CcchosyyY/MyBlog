@@ -1,12 +1,12 @@
 import { getPostCountByCategory } from '@/lib/posts';
 import CategorySidebar from '@/components/CategorySidebar';
 
-export default function BlogLayout({
+export default async function BlogLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const postCounts = getPostCountByCategory();
+  const postCounts = await getPostCountByCategory();
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">

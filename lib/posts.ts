@@ -1,10 +1,5 @@
-import fs from 'fs';
-import path from 'path';
-import matter from 'gray-matter';
-import readingTime from 'reading-time';
+import { getSupabase, Post } from './supabase';
 import { CATEGORIES, getCategoryName } from './categories';
-
-const postsDirectory = path.join(process.cwd(), 'content/posts');
 
 export { CATEGORIES, getCategoryName };
 export type { CategoryId } from './categories';
@@ -19,65 +14,76 @@ export interface PostMeta {
   readingTime: string;
 }
 
-export interface Post extends PostMeta {
+export interface PostWithContent extends PostMeta {
   content: string;
 }
 
-export function getAllPosts(): PostMeta[] {
-  if (!fs.existsSync(postsDirectory)) {
-    return [];
-  }
-
-  const fileNames = fs.readdirSync(postsDirectory);
-  const posts = fileNames
-    .filter((fileName) => fileName.endsWith('.mdx'))
-    .map((fileName) => {
-      const slug = fileName.replace(/\.mdx$/, '');
-      const fullPath = path.join(postsDirectory, fileName);
-      const fileContents = fs.readFileSync(fullPath, 'utf8');
-      const { data, content } = matter(fileContents);
-      const stats = readingTime(content);
-
-      return {
-        slug,
-        title: data.title || 'Untitled',
-        description: data.description || '',
-        date: data.date || new Date().toISOString().split('T')[0],
-        tags: data.tags || [],
-        category: data.category || 'daily',
-        readingTime: stats.text,
-      };
-    })
-    .sort((a, b) => (a.date > b.date ? -1 : 1));
-
-  return posts;
+function calculateReadingTime(content: string): string {
+  const wordsPerMinute = 200;
+  const words = content.trim().split(/\s+/).length;
+  const minutes = Math.ceil(words / wordsPerMinute);
+  return `${minutes} min read`;
 }
 
-export function getPostBySlug(slug: string): Post | null {
-  const fullPath = path.join(postsDirectory, `${slug}.mdx`);
-
-  if (!fs.existsSync(fullPath)) {
-    return null;
-  }
-
-  const fileContents = fs.readFileSync(fullPath, 'utf8');
-  const { data, content } = matter(fileContents);
-  const stats = readingTime(content);
-
+function mapPostToMeta(post: Post): PostMeta {
   return {
-    slug,
-    title: data.title || 'Untitled',
-    description: data.description || '',
-    date: data.date || new Date().toISOString().split('T')[0],
-    tags: data.tags || [],
-    category: data.category || 'daily',
-    readingTime: stats.text,
-    content,
+    title: post.title,
+    description: post.description || '',
+    date: post.published_at || post.created_at,
+    tags: post.tags || [],
+    category: post.category || 'daily',
+    slug: post.slug,
+    readingTime: calculateReadingTime(post.content),
   };
 }
 
-export function getAllTags(): string[] {
-  const posts = getAllPosts();
+export async function getAllPosts(): Promise<PostMeta[]> {
+  try {
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from('posts')
+      .select('*')
+      .eq('status', 'published')
+      .order('published_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching posts:', error);
+      return [];
+    }
+
+    return (data || []).map(mapPostToMeta);
+  } catch (e) {
+    console.error('Supabase not configured:', e);
+    return [];
+  }
+}
+
+export async function getPostBySlug(slug: string): Promise<PostWithContent | null> {
+  try {
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from('posts')
+      .select('*')
+      .eq('slug', slug)
+      .eq('status', 'published')
+      .single();
+
+    if (error || !data) {
+      return null;
+    }
+
+    return {
+      ...mapPostToMeta(data),
+      content: data.content,
+    };
+  } catch (e) {
+    console.error('Supabase not configured:', e);
+    return null;
+  }
+}
+
+export async function getAllTags(): Promise<string[]> {
+  const posts = await getAllPosts();
   const tags = new Set<string>();
 
   posts.forEach((post) => {
@@ -87,18 +93,52 @@ export function getAllTags(): string[] {
   return Array.from(tags).sort();
 }
 
-export function getPostsByTag(tag: string): PostMeta[] {
-  const posts = getAllPosts();
-  return posts.filter((post) => post.tags.includes(tag));
+export async function getPostsByTag(tag: string): Promise<PostMeta[]> {
+  try {
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from('posts')
+      .select('*')
+      .eq('status', 'published')
+      .contains('tags', [tag])
+      .order('published_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching posts by tag:', error);
+      return [];
+    }
+
+    return (data || []).map(mapPostToMeta);
+  } catch (e) {
+    console.error('Supabase not configured:', e);
+    return [];
+  }
 }
 
-export function getPostsByCategory(categoryId: string): PostMeta[] {
-  const posts = getAllPosts();
-  return posts.filter((post) => post.category === categoryId);
+export async function getPostsByCategory(categoryId: string): Promise<PostMeta[]> {
+  try {
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from('posts')
+      .select('*')
+      .eq('status', 'published')
+      .eq('category', categoryId)
+      .order('published_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching posts by category:', error);
+      return [];
+    }
+
+    return (data || []).map(mapPostToMeta);
+  } catch (e) {
+    console.error('Supabase not configured:', e);
+    return [];
+  }
 }
 
-export function getPostCountByCategory(): Record<string, number> {
-  const posts = getAllPosts();
+export async function getPostCountByCategory(): Promise<Record<string, number>> {
+  const posts = await getAllPosts();
   const counts: Record<string, number> = {};
 
   CATEGORIES.forEach((cat) => {
@@ -112,4 +152,167 @@ export function getPostCountByCategory(): Record<string, number> {
   });
 
   return counts;
+}
+
+// Admin functions
+
+export interface CreatePostInput {
+  title: string;
+  content: string;
+  slug: string;
+  description?: string;
+  category?: string;
+  tags?: string[];
+  status?: 'draft' | 'published';
+  suggested_category?: string;
+}
+
+export interface UpdatePostInput extends Partial<CreatePostInput> {
+  id: string;
+}
+
+export async function createPost(input: CreatePostInput): Promise<Post | null> {
+  try {
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from('posts')
+      .insert({
+        ...input,
+        published_at: input.status === 'published' ? new Date().toISOString() : null,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating post:', error);
+      return null;
+    }
+
+    return data;
+  } catch (e) {
+    console.error('Supabase not configured:', e);
+    return null;
+  }
+}
+
+export async function updatePost(input: UpdatePostInput): Promise<Post | null> {
+  try {
+    const supabase = getSupabase();
+    const { id, ...updateData } = input;
+
+    // If status is changing to published, set published_at
+    if (updateData.status === 'published') {
+      const { data: existingPost } = await supabase
+        .from('posts')
+        .select('published_at')
+        .eq('id', id)
+        .single();
+
+      if (!existingPost?.published_at) {
+        (updateData as Record<string, unknown>).published_at = new Date().toISOString();
+      }
+    }
+
+    const { data, error } = await supabase
+      .from('posts')
+      .update({
+        ...updateData,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating post:', error);
+      return null;
+    }
+
+    return data;
+  } catch (e) {
+    console.error('Supabase not configured:', e);
+    return null;
+  }
+}
+
+export async function deletePost(id: string): Promise<boolean> {
+  try {
+    const supabase = getSupabase();
+    const { error } = await supabase
+      .from('posts')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error deleting post:', error);
+      return false;
+    }
+
+    return true;
+  } catch (e) {
+    console.error('Supabase not configured:', e);
+    return false;
+  }
+}
+
+export async function getDrafts(): Promise<Post[]> {
+  try {
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from('posts')
+      .select('*')
+      .eq('status', 'draft')
+      .order('updated_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching drafts:', error);
+      return [];
+    }
+
+    return data || [];
+  } catch (e) {
+    console.error('Supabase not configured:', e);
+    return [];
+  }
+}
+
+export async function getAllPostsAdmin(): Promise<Post[]> {
+  try {
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from('posts')
+      .select('*')
+      .order('updated_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching all posts:', error);
+      return [];
+    }
+
+    return data || [];
+  } catch (e) {
+    console.error('Supabase not configured:', e);
+    return [];
+  }
+}
+
+export async function getPostById(id: string): Promise<Post | null> {
+  try {
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from('posts')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      console.error('Error fetching post by id:', error);
+      return null;
+    }
+
+    return data;
+  } catch (e) {
+    console.error('Supabase not configured:', e);
+    return null;
+  }
 }

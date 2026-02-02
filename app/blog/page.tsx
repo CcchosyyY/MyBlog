@@ -8,9 +8,9 @@ export const metadata = {
   description: '모든 블로그 글 목록',
 };
 
-export default function BlogPage() {
-  const posts = getAllPosts();
-  const tags = getAllTags();
+export default async function BlogPage() {
+  const posts = await getAllPosts();
+  const tags = await getAllTags();
 
   const searchPosts = posts.map((post) => ({
     title: post.title,

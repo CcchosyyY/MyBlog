@@ -3,9 +3,9 @@ import { getAllPosts, getAllTags } from '@/lib/posts';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://myblog.vercel.app';
 
-export default function sitemap(): MetadataRoute.Sitemap {
-  const posts = getAllPosts();
-  const tags = getAllTags();
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const posts = await getAllPosts();
+  const tags = await getAllTags();
 
   const postUrls = posts.map((post) => ({
     url: `${SITE_URL}/blog/${post.slug}`,
