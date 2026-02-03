@@ -1,36 +1,50 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MyBlog
 
-## Getting Started
+Next.js 14 기반 개인 블로그 프로젝트
 
-First, run the development server:
+## 기술 스택
+
+- **Framework**: Next.js 14 (App Router)
+- **Styling**: Tailwind CSS
+- **Database**: Supabase
+- **Language**: TypeScript
+
+## 주요 기능
+
+- 블로그 글 작성/수정/삭제 (Admin UI)
+- 5개 카테고리 분류 (일상/개발/요리/공부/운동)
+- 태그 시스템
+- 다크모드
+- 검색 기능
+- 목차(TOC) 자동 생성
+- Quick Memo 위젯
+- RSS 피드
+- SEO 최적화
+
+## 시작하기
 
 ```bash
+# 의존성 설치
+npm install
+
+# 환경 변수 설정
+cp .env.local.example .env.local
+# .env.local 파일에 Supabase 정보 입력
+
+# 개발 서버 실행
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+[http://localhost:3000](http://localhost:3000)에서 확인
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 환경 변수
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+ADMIN_PASSWORD=your_admin_password
+```
 
-## Learn More
+## 배포
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Vercel에서 자동 배포 지원
