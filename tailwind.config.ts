@@ -10,12 +10,12 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: 'var(--background)',
-        foreground: 'var(--foreground)',
-        dark: '#262629',       // 다크 배경
-        light: '#f2f4f4',      // 밝은 텍스트
-        teal: '#0e997c',       // 청록색 accent
-        rose: '#d2698b',       // 핑크 accent
+        background: 'rgb(var(--background) / <alpha-value>)',
+        foreground: 'rgb(var(--foreground) / <alpha-value>)',
+        dark: 'rgb(var(--color-dark) / <alpha-value>)',
+        light: 'rgb(var(--color-light) / <alpha-value>)',
+        teal: '#0e997c',
+        rose: '#d2698b',
       },
       typography: {
         DEFAULT: {

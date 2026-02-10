@@ -1,18 +1,19 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
+import { createSession, setSessionCookie, deleteSession } from '@/lib/auth';
 
 export async function POST(request: Request) {
-  const { password } = await request.json();
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
+
+  const { password } = body;
 
   if (password === process.env.ADMIN_PASSWORD) {
-    const cookieStore = await cookies();
-    cookieStore.set('admin_session', 'authenticated', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 60 * 60 * 24 * 7, // 7 days
-      path: '/',
-    });
+    const token = await createSession();
+    await setSessionCookie(token);
 
     return NextResponse.json({ success: true });
   }
@@ -21,7 +22,6 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE() {
-  const cookieStore = await cookies();
-  cookieStore.delete('admin_session');
+  await deleteSession();
   return NextResponse.json({ success: true });
 }

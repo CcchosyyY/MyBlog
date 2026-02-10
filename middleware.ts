@@ -4,12 +4,13 @@ import type { NextRequest } from 'next/server';
 export function middleware(request: NextRequest) {
   if (request.nextUrl.pathname.startsWith('/admin')) {
     const session = request.cookies.get('admin_session');
+    const hasValidSession = session?.value && session.value.length > 0;
 
-    if (!session && !request.nextUrl.pathname.includes('/login')) {
+    if (!hasValidSession && !request.nextUrl.pathname.includes('/login')) {
       return NextResponse.redirect(new URL('/admin/login', request.url));
     }
 
-    if (session && request.nextUrl.pathname === '/admin/login') {
+    if (hasValidSession && request.nextUrl.pathname === '/admin/login') {
       return NextResponse.redirect(new URL('/admin', request.url));
     }
   }

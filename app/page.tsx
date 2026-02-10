@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import PostCard from '@/components/PostCard';
 import CategorySidebar from '@/components/CategorySidebar';
-import QuickMemoWidget from '@/components/QuickMemoWidget';
+
 import { getAllPosts, getPostCountByCategory } from '@/lib/posts';
 
 export default async function Home() {
@@ -102,7 +102,7 @@ export default async function Home() {
           </section>
         </div>
 
-        {/* Right sidebar - Write button and Quick Memo */}
+        {/* Right sidebar - Write button */}
         <div className="hidden lg:block w-48 shrink-0 ml-12">
           <div className="sticky top-24 space-y-4">
             <Link
@@ -124,7 +124,6 @@ export default async function Home() {
               </svg>
               글쓰기
             </Link>
-            <QuickMemoWidget />
           </div>
         </div>
       </div>

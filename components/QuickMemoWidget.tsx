@@ -110,14 +110,14 @@ export default function QuickMemoWidget() {
 
       {isOpen && (
         <div className="mt-3 animate-fadeIn">
-          <div className="bg-white rounded-lg p-3 shadow-lg">
+          <div className="bg-light/10 rounded-lg p-3 shadow-lg">
             <textarea
               ref={textareaRef}
               value={content}
               onChange={(e) => setContent(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="메모를 입력하세요..."
-              className="w-full h-20 resize-none border-0 focus:outline-none text-dark text-sm"
+              className="w-full h-20 resize-none border-0 focus:outline-none bg-transparent text-light text-sm"
             />
             <div className="flex justify-end gap-2 mt-2">
               <button
@@ -125,7 +125,7 @@ export default function QuickMemoWidget() {
                   setIsOpen(false);
                   setContent('');
                 }}
-                className="px-3 py-1.5 text-sm text-dark/60 hover:text-dark transition-colors"
+                className="px-3 py-1.5 text-sm text-light/60 hover:text-light transition-colors"
               >
                 취소
               </button>
@@ -154,7 +154,7 @@ export default function QuickMemoWidget() {
               </span>
               <button
                 onClick={() => handleDelete(memo.id)}
-                className="opacity-0 group-hover:opacity-100 p-1 text-light/40 hover:text-rose transition-all"
+                className="opacity-0 group-hover:opacity-100 focus:opacity-100 p-1 text-light/40 hover:text-rose transition-all"
                 title="삭제"
               >
                 <svg
